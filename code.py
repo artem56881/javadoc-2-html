@@ -47,26 +47,23 @@ def read_java_file(file_path):
         return file.read()
 
 def main():
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 2 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
         print("Usage: python script.py <path_to_java_file>")
         sys.exit(1)
 
     file_path = sys.argv[1]
     java_code = read_java_file(file_path)
 
-    # Извлечение комментариев Javadoc
     javadoc_comments = extract_javadoc_comments(java_code)
 
-    # Парсинг комментариев
     parsed_comments = [parse_javadoc_comment(comment) for comment in javadoc_comments]
 
-    # Генерация HTML-документации
     html_documentation = generate_html_documentation(parsed_comments)
 
-    # Сохранение HTML-документации в файл
     with open('javadoc_documentation.html', 'w', encoding='utf-8') as file:
         file.write(html_documentation)
 
 if __name__ == "__main__":
     main()
 
+ # type: ignore
