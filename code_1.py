@@ -116,18 +116,19 @@ def generate_html_documentation(all_docs_by_file):
             for method in methods:
                 html.append(f"<div style='margin-left: 40px;'>")
                 html.append(
-                    f"<h4>{method['method_name']}({method.get('parameters', '')})</h4>"
+                    f"<h4>{method['method_name']}"
+                    f"({method.get('parameters', '')})</h4>"
                 )
                 html.append(f"<div style='margin-left: 60px;'>")
 
-
                 if method.get("description"):
                     html.append(
-                        f"<p><b>Descri"
-                        f"ption:</b> {method['description']}</p>"
+                        f"<p><b>Descrip"
+                        f"tion:</b> {method['description']}</p>"
                     )
                 if method.get("author"):
-                    html.append(f"<p><b>Author:</b> {method['author']}</p>")
+                    html.append(f"<p><b>Auth"
+                                f"or:</b> {method['author']}</p>")
                 if method.get("params"):
                     html.append("<p><b>Parameters:</b><ul>")
                     for name, desc in method["params"]:
@@ -136,7 +137,8 @@ def generate_html_documentation(all_docs_by_file):
                 if method.get("see"):
                     html.append(f"<p><b>See also:</b> {method['see']}</p>")
                 if method.get("return"):
-                    html.append(f"<p><b>Returns:</b> {method['return']}</p>")
+                    html.append(f"<p><b>Return"
+                                f"s:</b> {method['return']}</p>")
                 # html.append("aaaaaaaaaaaaaaaaaaaaa")
                 html.append("</div>")
                 html.append("</div>")
@@ -184,8 +186,6 @@ def main():
     pprint(all_docs_by_file)
     with open("all_java_docs.html", "w", encoding="utf-8") as f:
         f.write(html)
-
-    # print("Documentation written to all_java_docs.html")
 
 
 if __name__ == "__main__":
