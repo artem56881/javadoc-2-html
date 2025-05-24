@@ -100,8 +100,8 @@ def parse_java_file(file_path):
 
 def generate_html_documentation(all_docs_by_file):
     html = [
-        "<html><head><meta charset='utf-8'><tit"
-        "le>JavaDoc</title></head><body>"
+        '<html><head><link rel=\"stylesheet\" href=\"styles.css\"><m'
+        'eta charset=\'utf-8\'><title>JavaDoc</title></head><body>'
     ]
     html.append("<h1>JavaDoc</h1>")
 
