@@ -1,4 +1,3 @@
-from pprint import pprint
 import re
 import sys
 import os
@@ -123,12 +122,11 @@ def generate_html_documentation(all_docs_by_file):
 
                 if method.get("description"):
                     html.append(
-                        f"<p><b>Descrip"
-                        f"tion:</b> {method['description']}</p>"
+                        f"<p><b>Descr"
+                        f"iption:</b> {method['description']}</p>"
                     )
                 if method.get("author"):
-                    html.append(f"<p><b>Auth"
-                                f"or:</b> {method['author']}</p>")
+                    html.append(f"<p><b>Author:</b> {method['author']}</p>")
                 if method.get("params"):
                     html.append("<p><b>Parameters:</b><ul>")
                     for name, desc in method["params"]:
@@ -137,8 +135,8 @@ def generate_html_documentation(all_docs_by_file):
                 if method.get("see"):
                     html.append(f"<p><b>See also:</b> {method['see']}</p>")
                 if method.get("return"):
-                    html.append(f"<p><b>Return"
-                                f"s:</b> {method['return']}</p>")
+                    html.append(f"<p><b>Retu"
+                                f"rns:</b> {method['return']}</p>")
                 # html.append("aaaaaaaaaaaaaaaaaaaaa")
                 html.append("</div>")
                 html.append("</div>")
@@ -161,6 +159,17 @@ def read_java_files(path):
     return java_files
 
 
+def get_html(java_files):
+    all_docs_by_file = {}
+
+    for java_file in java_files:
+        doc = parse_java_file(java_file)
+        all_docs_by_file[java_file] = doc
+
+    html = generate_html_documentation(all_docs_by_file)
+    return html
+
+
 def main():
     if len(sys.argv) != 2 or sys.argv[1] in ["-h", "--help"]:
         print(
@@ -171,19 +180,12 @@ def main():
 
     path = sys.argv[1]
     java_files = read_java_files(path)
-
+    print(java_files)
     if not java_files:
         print(".java файлы не найдены в указаной директории")
         sys.exit(1)
 
-    all_docs_by_file = {}
-
-    for java_file in java_files:
-        doc = parse_java_file(java_file)
-        all_docs_by_file[java_file] = doc
-
-    html = generate_html_documentation(all_docs_by_file)
-    pprint(all_docs_by_file)
+    html = get_html(java_files)
     with open("all_java_docs.html", "w", encoding="utf-8") as f:
         f.write(html)
 
