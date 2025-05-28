@@ -16,7 +16,6 @@ class TestShipFunctions(unittest.TestCase):
     def test_get_html(self):
         with open("test_html.txt") as f:
             test_html = f.read()
-        test_html = test_html.replace("\\n", "")
         recievd_html = get_html(read_java_files("./test_java_files"))
-        recievd_html = recievd_html.replace("\n", "")
+        recievd_html = repr(recievd_html)
         self.assertEqual(recievd_html, test_html)

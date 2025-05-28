@@ -1,15 +1,17 @@
 import re
 import sys
 import os
-from pprint import pprint
+
 
 def extract_class_name(line):
     match = re.search(r"\bclass\s+(\w+)", line)
     return match.group(1) if match else None
 
+
 def extract_interface_name(line):
     match = re.search(r"\binterface\s+(\w+)", line)
     return match.group(1) if match else None
+
 
 def extract_method_signature(line):
     pattern = (
@@ -25,6 +27,7 @@ def extract_method_signature(line):
         }
         return signature
     return None
+
 
 def parse_javadoc_block(javadoc_lines):
     doc = {"description": "", "author": "", "params": [], "see": ""}
@@ -45,6 +48,7 @@ def parse_javadoc_block(javadoc_lines):
             description_lines.append(line)
     doc["description"] = " ".join(description_lines)
     return doc
+
 
 def parse_java_file(file_path):
     documentation = {}
@@ -102,7 +106,9 @@ def parse_java_file(file_path):
 
             # Наследование интерфейса
             if current_class and "implements" in stripped:
-                interface = stripped.split("implements")[1].split()[0].strip()
+                interface = (
+                    stripped.split("implements")[1].split()[0].strip()
+                )
                 if interface in interfaces:
                     interfaces[interface].append(current_class)
 
@@ -117,10 +123,11 @@ def parse_java_file(file_path):
 
     return documentation, interfaces
 
+
 def generate_html_documentation(all_docs_by_file, interfaces):
     html = [
-        '<html><head><link rel=\"stylesheet\" href=\"styles.css\"><m'
-        'eta charset=\'utf-8\'><title>JavaDoc</title></head><body>'
+        '<html><head><link rel="stylesheet" href="styles.css"><m'
+        "eta charset='utf-8'><title>JavaDoc</title></head><body>"
     ]
     html.append("<h1>JavaDoc</h1>")
 
@@ -134,7 +141,10 @@ def generate_html_documentation(all_docs_by_file, interfaces):
             # Гиперссылки на интерфейсы
             for interface, implementors in interfaces.items():
                 if class_name in implementors:
-                    html.append(f"<p>Implements: <a href='#{interface}'>{interface}</a></p>")
+                    html.append(
+                        f"<p>Implements: <a href"
+                        f"='#{interface}'>{interface}</a></p>"
+                    )
 
             for method in methods:
                 html.append(f"<div style='margin-left: 40px;'>")
@@ -146,8 +156,7 @@ def generate_html_documentation(all_docs_by_file, interfaces):
 
                 if method.get("description"):
                     html.append(
-                        f"<p><b>Descr"
-                        f"iption:</b> {method['description']}</p>"
+                        f"<p><b>Description:</b> {method['description']}</p>"
                     )
                 if method.get("author"):
                     html.append(f"<p><b>Author:</b> {method['author']}</p>")
@@ -159,8 +168,7 @@ def generate_html_documentation(all_docs_by_file, interfaces):
                 if method.get("see"):
                     html.append(f"<p><b>See also:</b> {method['see']}</p>")
                 if method.get("return"):
-                    html.append(f"<p><b>Retu"
-                                f"rns:</b> {method['return']}</p>")
+                    html.append(f"<p><b>Returns:</b> {method['return']}</p>")
                 html.append("</div>")
                 html.append("</div>")
 
@@ -180,8 +188,8 @@ def generate_html_documentation(all_docs_by_file, interfaces):
 
                 if method.get("description"):
                     html.append(
-                        f"<p><b>Descr"
-                        f"iption:</b> {method['description']}</p>"
+                        f"<p><b>Descrip"
+                        f"tion:</b> {method['description']}</p>"
                     )
                 if method.get("author"):
                     html.append(f"<p><b>Author:</b> {method['author']}</p>")
@@ -193,13 +201,13 @@ def generate_html_documentation(all_docs_by_file, interfaces):
                 if method.get("see"):
                     html.append(f"<p><b>See also:</b> {method['see']}</p>")
                 if method.get("return"):
-                    html.append(f"<p><b>Retu"
-                                f"rns:</b> {method['return']}</p>")
+                    html.append(f"<p><b>Returns:</b> {method['return']}</p>")
                 html.append("</div>")
                 html.append("</div>")
 
     html.append("</body></html>")
     return "\n".join(html)
+
 
 def read_java_files(path):
     java_files = []
@@ -212,6 +220,7 @@ def read_java_files(path):
                     java_files.append(os.path.join(root, file))
     return java_files
 
+
 def get_html(java_files):
     all_docs_by_file = {}
     interfaces = {}
@@ -223,6 +232,7 @@ def get_html(java_files):
 
     html = generate_html_documentation(all_docs_by_file, interfaces)
     return html
+
 
 def main():
     if len(sys.argv) != 2 or sys.argv[1] in ["-h", "--help"]:
@@ -242,6 +252,7 @@ def main():
     html = get_html(java_files)
     with open("all_java_docs.html", "w", encoding="utf-8") as f:
         f.write(html)
+
 
 if __name__ == "__main__":
     main()
