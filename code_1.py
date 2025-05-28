@@ -1,12 +1,15 @@
 import re
 import sys
 import os
-
+from pprint import pprint
 
 def extract_class_name(line):
     match = re.search(r"\bclass\s+(\w+)", line)
     return match.group(1) if match else None
 
+def extract_interface_name(line):
+    match = re.search(r"\binterface\s+(\w+)", line)
+    return match.group(1) if match else None
 
 def extract_method_signature(line):
     pattern = (
@@ -22,7 +25,6 @@ def extract_method_signature(line):
         }
         return signature
     return None
-
 
 def parse_javadoc_block(javadoc_lines):
     doc = {"description": "", "author": "", "params": [], "see": ""}
@@ -44,11 +46,12 @@ def parse_javadoc_block(javadoc_lines):
     doc["description"] = " ".join(description_lines)
     return doc
 
-
 def parse_java_file(file_path):
     documentation = {}
+    interfaces = {}
     with open(file_path, "r", encoding="utf-8") as file:
         current_class = None
+        current_interface = None
         bracket_stack = []
         javadoc_buffer = []
         in_javadoc = False
@@ -74,19 +77,36 @@ def parse_java_file(file_path):
                 current_class = class_name
                 documentation[current_class] = []
 
+            # Интерфейс
+            interface_name = extract_interface_name(stripped)
+            if interface_name:
+                current_interface = interface_name
+                interfaces[current_interface] = []
+
             # Метод
             method = extract_method_signature(stripped)
-            if method and current_class:
+            if method:
                 javadoc = (
                     parse_javadoc_block(javadoc_buffer)
                     if javadoc_buffer
                     else {}
                 )
                 method.update(javadoc)
-                documentation[current_class].append(method)
+
+                if current_class:
+                    documentation[current_class].append(method)
+                elif current_interface:
+                    interfaces[current_interface].append(method)
+
                 javadoc_buffer = []
 
-            # отслеживание текущего класса по скобкам
+            # Наследование интерфейса
+            if current_class and "implements" in stripped:
+                interface = stripped.split("implements")[1].split()[0].strip()
+                if interface in interfaces:
+                    interfaces[interface].append(current_class)
+
+            # Отслеживание текущего класса по скобкам
             if current_class:
                 bracket_stack += ["{"] * stripped.count("{")
                 bracket_stack = bracket_stack[
@@ -95,10 +115,9 @@ def parse_java_file(file_path):
                 if not bracket_stack:
                     current_class = None
 
-    return documentation
+    return documentation, interfaces
 
-
-def generate_html_documentation(all_docs_by_file):
+def generate_html_documentation(all_docs_by_file, interfaces):
     html = [
         '<html><head><link rel=\"stylesheet\" href=\"styles.css\"><m'
         'eta charset=\'utf-8\'><title>JavaDoc</title></head><body>'
@@ -111,6 +130,11 @@ def generate_html_documentation(all_docs_by_file):
         for class_name, methods in classes.items():
             html.append(f"<div style='margin-left: 20px;'>")
             html.append(f"<h3>Class: {class_name}</h3>")
+
+            # Гиперссылки на интерфейсы
+            for interface, implementors in interfaces.items():
+                if class_name in implementors:
+                    html.append(f"<p>Implements: <a href='#{interface}'>{interface}</a></p>")
 
             for method in methods:
                 html.append(f"<div style='margin-left: 40px;'>")
@@ -137,15 +161,45 @@ def generate_html_documentation(all_docs_by_file):
                 if method.get("return"):
                     html.append(f"<p><b>Retu"
                                 f"rns:</b> {method['return']}</p>")
-                # html.append("aaaaaaaaaaaaaaaaaaaaa")
                 html.append("</div>")
                 html.append("</div>")
 
             html.append("</div>")
 
+    # Добавляем информацию об интерфейсах
+    for interface, methods in interfaces.items():
+        html.append(f"<hr><h2 id='{interface}'>Interface: {interface}</h2>")
+        for method in methods:
+            if isinstance(method, dict):
+                html.append(f"<div style='margin-left: 40px;'>")
+                html.append(
+                    f"<h4>{method['method_name']}"
+                    f"({method.get('parameters', '')})</h4>"
+                )
+                html.append(f"<div style='margin-left: 60px;'>")
+
+                if method.get("description"):
+                    html.append(
+                        f"<p><b>Descr"
+                        f"iption:</b> {method['description']}</p>"
+                    )
+                if method.get("author"):
+                    html.append(f"<p><b>Author:</b> {method['author']}</p>")
+                if method.get("params"):
+                    html.append("<p><b>Parameters:</b><ul>")
+                    for name, desc in method["params"]:
+                        html.append(f"<li><b>{name}</b>: {desc}</li>")
+                    html.append("</ul></p>")
+                if method.get("see"):
+                    html.append(f"<p><b>See also:</b> {method['see']}</p>")
+                if method.get("return"):
+                    html.append(f"<p><b>Retu"
+                                f"rns:</b> {method['return']}</p>")
+                html.append("</div>")
+                html.append("</div>")
+
     html.append("</body></html>")
     return "\n".join(html)
-
 
 def read_java_files(path):
     java_files = []
@@ -158,17 +212,17 @@ def read_java_files(path):
                     java_files.append(os.path.join(root, file))
     return java_files
 
-
 def get_html(java_files):
     all_docs_by_file = {}
+    interfaces = {}
 
     for java_file in java_files:
-        doc = parse_java_file(java_file)
+        doc, intf = parse_java_file(java_file)
         all_docs_by_file[java_file] = doc
+        interfaces.update(intf)
 
-    html = generate_html_documentation(all_docs_by_file)
+    html = generate_html_documentation(all_docs_by_file, interfaces)
     return html
-
 
 def main():
     if len(sys.argv) != 2 or sys.argv[1] in ["-h", "--help"]:
@@ -188,7 +242,6 @@ def main():
     html = get_html(java_files)
     with open("all_java_docs.html", "w", encoding="utf-8") as f:
         f.write(html)
-
 
 if __name__ == "__main__":
     main()
